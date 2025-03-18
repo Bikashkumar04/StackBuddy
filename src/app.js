@@ -1,12 +1,19 @@
 const express = require('express'); 
 const app = express(); 
 
-app.get('/user/:userId',(req,res)=>{
-    console.log(req.params)
+app.get(
+    '/user/',
+    (req,res,next)=>
+        {
     console.log(req.query)
     res.send({firstname:"Bikash", lastname: "Kumar"})
-    
-})
+    next()
+    },
+    (req,res)=>{
+        console.log("request handler route 2")
+        res.send("response 2")
+    }
+)
 
 app.get('/test', (req, res) => {
     res.send('Hello, World!'); 
