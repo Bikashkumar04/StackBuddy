@@ -1,12 +1,15 @@
 const express = require('express'); 
-const app = express(); 
+const app = express();
 require('dotenv').config();
-const {connectDB } = require('./config/database')
-const User =require("./models/user")
-
-const {validateSignUp} =require('./utils/validation')
+const {connectDB } = require('./config/database');
+const User =require("./models/user");
+const {validateSignUp} =require('./utils/validation');
 const bcrypt = require('bcrypt');
+const cookieParser =require('cookie-parser');
+const jwt =require('jsonwebtoken')
+const {userAuth} =require('./middlewares/auth')
 
+app.use(cookieParser())
 app.use(express.json())
 app.post("/signup", async (req,res)=>{
     try{
@@ -53,16 +56,28 @@ app.post('/login', async (req,res)=>{
 
         if (!isPasswordValid) {
             return res.status(400).send("Invalid credentials");
-        }
-
-        return res.status(200).send("Login successful");
+        }else{
+            //create jwt token
+            const token = await jwt.sign({_id: existingUser._id}, "stackbuddy@1504",{
+                expiresIn:'1h'
+            })
+            console.log(token);
+            res.cookie("token",token,{ expires: new Date(Date.now() +8* 3600000), httpOnly: true })
+            return res.status(200).send("Login successful");}
     }
     catch(err){
         res.status(400).send("Invalid credentials");
     }
 })
 
-app.get("/user", async (req, res)=>{
+app.get("/profile", userAuth, async (req, res)=>{
+    try{
+        const user =req.user
+        res.send(user)
+    }
+    catch(err){
+        res.status(400).send("Invalid credentials") 
+    }
 
 })
 
